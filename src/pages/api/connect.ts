@@ -19,33 +19,39 @@ export default function handler(
 		!req.body.host ||
 		!req.body.port ||
 		!req.body.username ||
-		!req.body.password
+		!req.body.password ||
+		!req.body.command
 	)
 		return res.status(400).json({ error: "missing parameters" });
 
-	const client = new Client();
-	client
-		.on("ready", () => {
-			client.shell(async (err, stream) => {
-				if (err) return res.status(500).json({ error: err.message });
+	try {
+		const client = new Client();
+		client
+			.on("ready", () => {
+				client.shell(async (err, stream) => {
+					if (err) return res.status(500).json({ error: err.message });
 
-				stream.on("close", () => {
-					client.end();
-				});
-
-				client.exec(req.body.command, (err, stream) => {
-					if (err) throw err;
-					stream.on("data", (data: string) => {
-						res.status(200).json({ message: "" + data });
+					stream.on("close", () => {
 						client.end();
 					});
+
+					client.exec(req.body.command, (err, stream) => {
+						if (err) throw err;
+						stream.on("data", (data: string) => {
+							res.status(200).json({ message: "" + data });
+							client.end();
+						});
+					});
 				});
+			})
+			.connect({
+				host: req.body.host,
+				port: +req.body.port,
+				username: req.body.username,
+				password: req.body.password,
 			});
-		})
-		.connect({
-			host: req.body.host,
-			port: req.body.port,
-			username: req.body.username,
-			password: req.body.password,
-		});
+	} catch (error: any) {
+		console.error(error);
+		return res.status(500).json({ error: error.message });
+	}
 }
