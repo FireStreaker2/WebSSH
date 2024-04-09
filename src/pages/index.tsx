@@ -12,6 +12,11 @@ interface Config {
 	password: string;
 }
 
+interface Data {
+	error?: string;
+	message?: string;
+}
+
 export default function Home() {
 	const [theme, setTheme] = useState<Theme>("light");
 	const [loggedIn, setLoggedIn] = useState(false);
@@ -47,8 +52,21 @@ export default function Home() {
 					errorMessage={(command: string) =>
 						`webssh: ${command}: command not found`
 					}
-					// TODO: add command logic (fetch /api/connect endpoint)
-					defaultHandler={(command: string) => JSON.stringify(config)}
+					defaultHandler={async (command: string) => {
+						const response = await fetch("/api/connect", {
+							method: "POST",
+							body: JSON.stringify({
+								...config,
+								command,
+							}),
+						});
+
+						if (!response.ok) return "an error occurred";
+
+						const data: Data = await response.json();
+
+						return data.error || data.message;
+					}}
 				/>
 			) : (
 				<form>
@@ -89,7 +107,7 @@ export default function Home() {
 					</div>
 
 					<button
-						onClick={(event) => {
+						onClick={async (event) => {
 							event.preventDefault();
 
 							// TODO: use something thats not an alert
@@ -98,8 +116,19 @@ export default function Home() {
 
 							if (config.port === "") config.port = "22";
 
-							// TODO: check if you can actually ssh in before rendering terminal
-							setLoggedIn(true);
+							const response = await fetch("/api/connect", {
+								method: "POST",
+								body: JSON.stringify({
+									...config,
+									command: "ls",
+								}),
+							});
+
+							if (!response.ok) return alert("an error occurred");
+
+							const data: Data = await response.json();
+
+							data.error ? alert("error while logging in") : setLoggedIn(true);
 						}}
 					>
 						Login
