@@ -75,8 +75,8 @@ export default function Home() {
 				/>
 			) : (
 				<div className="w-full h-full flex justify-center items-center">
-					<form className="border dark:border-white border-black flex justify-center items-center text-center flex-col gap-4 w-96 h-96">
-						<h1 className="text-3xl">WebSSH</h1>
+					<form className="border rounded-xl dark:border-white border-black flex justify-center items-center text-center flex-col gap-4 w-96">
+						<h1 className="text-3xl m-5">WebSSH</h1>
 						<div className="flex flex-col">
 							<h1 className="text-xl">Server</h1>
 							<input
@@ -113,13 +113,13 @@ export default function Home() {
 							/>
 						</div>
 
-						<div className="relative w-full h-5 flex justify-center items-center">
+						<div className="relative w-full h-5 flex justify-center items-center mt-3">
 							{error && <p className="absolute text-red-500">{error}</p>}
 							{loading && <SpinningCircles />}
 						</div>
 
 						<button
-							className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-2 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800"
+							className="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:ring-blue-300 font-medium rounded-lg text-sm px-5 py-2.5 me-2 mb-4 dark:bg-blue-600 dark:hover:bg-blue-700 focus:outline-none dark:focus:ring-blue-800 mt-4"
 							onClick={async (event) => {
 								event.preventDefault();
 
@@ -132,6 +132,7 @@ export default function Home() {
 								}
 
 								setLoading(true);
+								setError("");
 
 								const response = await fetch("/api/connect", {
 									method: "POST",
@@ -141,16 +142,15 @@ export default function Home() {
 									}),
 								});
 
+								setLoading(false);
+
 								if (!response.ok) return setError("an http error occurred!");
 
 								const data: Data = await response.json();
 
 								if (data.error)
 									setError(`an error occurred while logging in: ${data.error}`);
-								else {
-									setLoading(false);
-									setLoggedIn(true);
-								}
+								else setLoggedIn(true);
 							}}
 						>
 							Login
